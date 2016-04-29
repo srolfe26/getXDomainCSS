@@ -1,0 +1,55 @@
+<!doctype html>
+<html class="no-js" lang="">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>getXDomainCSS Demo</title>
+        <meta name="description" content="A small jQuery dependent function for getting cross-domain CSS via javascript with a cross-browser (IE8-Evergreen) method for firing a callback on CSS loading.">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.2/jquery.min.js"></script>
+        <script src="get-x-domain-css.js"></script>
+    </head>
+    <body>
+        <p>
+            Press the button to load the CSS: 
+            <button class="cta-button" onclick="simpleExample()">Load a Single File</button>
+            <button class="cta-button" onclick="loadCssMultiple()">Load Multiple</button>
+        </p>
+        <script>
+            // Here is the simple case
+            function simpleExample() {
+                getXDomainCSS('https://www.tsheets.com/assets/_css/header.css').done(function() {
+                    alert('Single CSS file loaded before JS run!');
+                });
+            }
+            
+            
+            // FOR THE MORE COMPLEX CASE OF LOADING MULTIPLE FILES
+            
+            // Load multiple CSS files with an additional deferred object, putting it outside of the
+            // method allows the deferred object to be re-referenced and thus the CSS not reloaded on
+            // successive button clicks.
+            var all_loaded = $.Deferred();
+            
+            function loadCssMultiple() {
+                if (all_loaded.state() != 'resolved') {        
+                    // How to load multiple CSS files before callback
+                    $.when.apply($, [
+                        getXDomainCSS('https://www.tsheets.com/assets/_css/header.css'),
+                        
+                        // You can get your non-x-domain CSS here too if you want
+                        getXDomainCSS('demo-styles.css'),
+                    ]).done(function() {
+                        all_loaded.resolve();
+                    });
+                }
+                
+                // Perform JS
+                all_loaded.done(function() {
+                    alert('Multiple CSS files loaded before JS run!');
+                });   
+            }
+        </script>
+    </body>
+</html>

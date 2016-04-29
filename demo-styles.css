@@ -1,0 +1,13 @@
+* {
+    font-family: Arial, Helvetica, Verdana, sans-serif;
+    text-decoration: none;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+p {
+    background-color: #3883CD;
+    padding: 0.5em 1em;
+    color: #fff;
+}
