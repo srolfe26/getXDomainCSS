@@ -51,7 +51,9 @@ function getXDomainCSS(url) {
                 style[0].sheet.cssRules;
                 promise.resolve();
                 clearInterval(interval);
-            } catch (e){}
+            } catch (e){
+                // TODO: Add a timeout counter here. Interval * 600 = 1 minute maybe?
+            }
         }, 10);   
     }
 
