@@ -19,9 +19,11 @@ function getXDomainCSS(url) {
     var link,
         style,
         interval,
-        timeout = 60000,            // 1 minute seems like a good timeout
-        counter = 0,                // Used to compare try time against timeout
-        step = 30,                  // Amount of wait time on each load check
+        timeout = 60000,                        // 1 minute seems like a good timeout
+        counter = 0,                            // Used to compare try time against timeout
+        step = 30,                              // Amount of wait time on each load check
+        docStyles = document.styleSheets        // local reference
+        ssCount = docStyles.length,             // Initial stylesheet count
         promise = $.Deferred();
     
     // IE 8 & 9 it is best to use 'onload'. style[0].sheet.cssRules has problems.
@@ -52,17 +54,47 @@ function getXDomainCSS(url) {
         // This setInterval will detect when style rules for our stylesheet have loaded.
         interval = setInterval(function() {
             try {
-                // This like will fail (and kick us to the catch statement) if there are no style rules.
+                // This will fail in Firefox (and kick us to the catch statement) if there are no 
+                // style rules.
                 style[0].sheet.cssRules;
                 
-                // If the above line doesn't fail, the stylesheet is loaded and we're good to proceed.
+                // The above statement will succeed in Chrome even if the file isn't loaded yet
+                // but Chrome won't increment the styleSheet length until the file is loaded.
+                if(ssCount === docStyles.length) {
+                    throw(url + ' not loaded yet');
+                }
+                else {
+                    var loaded = false,
+                        href,
+                        n;
+
+                    // If there are multiple files being loaded at once, we need to make sure that 
+                    // the new file is this file
+                    for (n = docStyles.length - 1; n >= 0; n--) {
+                        href = docStyles[n].cssRules[0].href;
+                        
+                        if (typeof href != 'undefined' && href === url) {
+                            // If there is an HTTP error there is no way to consistently
+                            // know it and handle it. The file is considered 'loaded', but
+                            // the console should will the HTTP error.
+                            loaded = true;
+                            break;
+                        }
+                    }
+                    
+                    if (loaded === false) {
+                        throw(url + ' not loaded yet');
+                    }
+                }
+                
+                // If an error wasn't thrown by now, the stylesheet is loaded, proceed.
                 promise.resolve();
                 clearInterval(interval);
             } catch (e) {
                 counter += step;
-                
+
                 if (counter > timeout) {
-                    // We're timing out
+                    // Time out so that the interval doesn't run indefinitely.
                     clearInterval(interval);
                     promise.reject();
                 }
