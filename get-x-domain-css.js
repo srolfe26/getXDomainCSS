@@ -19,6 +19,9 @@ function getXDomainCSS(url) {
     var link,
         style,
         interval,
+        timeout = 60000,            // 1 minute seems like a good timeout
+        counter = 0,                // Used to compare try time against timeout
+        step = 30,                  // Amount of wait time on each load check
         promise = $.Deferred();
     
     // IE 8 & 9 it is best to use 'onload'. style[0].sheet.cssRules has problems.
@@ -46,15 +49,26 @@ function getXDomainCSS(url) {
             })
             .appendTo('body');
             
+        // This setInterval will detect when style rules for our stylesheet have loaded.
         interval = setInterval(function() {
             try {
+                // This like will fail (and kick us to the catch statement) if there are no style rules.
                 style[0].sheet.cssRules;
+                
+                // If the above line doesn't fail, the stylesheet is loaded and we're good to proceed.
                 promise.resolve();
                 clearInterval(interval);
-            } catch (e){
-                // TODO: Add a timeout counter here. Interval * 600 = 1 minute maybe?
+            } catch (e) {
+                counter += step;
+                
+                if (counter > timeout) {
+                    // We're timing out
+                    clearInterval(interval);
+                    promise.reject();
+                }
+                
             }
-        }, 10);   
+        }, step);   
     }
 
     return promise;
